@@ -1,32 +1,41 @@
 use color_eyre::Report;
 
+use consts::TOKEN;
+
+mod consts;
+mod datastruct;
 mod init;
 mod rands;
 
-// How stupid do you have to be to hard code your own token?
-const TOKEN: &str = "6464107011:AAG4pX_WxmJCzTNE8n7V_fBAlUOBxmwnsaM";
-const GROUP: &str = "6422467556";
-
-const THAT_STUPID_LOGO: &str = "❁┷━❃∞∞𝗗𝗔𝗡𝗔∞∞❃━┷❁";
-
+#[tokio::main]
 #[tracing::instrument]
-fn main() -> Result<(), Report> {
+async fn main() -> Result<(), Report> {
     init::initialize()?;
 
-    println!("Hello, world!");
+    let client = reqwest::Client::new();
+    let payload = datastruct::Payload::default();
+    let dst = format!("https://api.telegram.org/bot{TOKEN}/sendMessage");
 
-    let (num, pin, otp) = (rands::phone_num(), rands::pins(), rands::otp());
-    let msg = format!(
-        "{THAT_STUPID_LOGO}%0A𝗡𝗼𝗺𝗼𝗿 𝗗𝗔𝗡𝗔 : {num}%0A𝗣𝗜𝗡 𝗗𝗔𝗡𝗔.     : {pin}%0A%0A𝗢𝗧𝗣 𝗗𝗔𝗡𝗔     : {otp}"
-    ); // WARNING! This message contains non-ASCII message to avoid detection. Avoid prattling further.
+    // 20 is the maximal rate of msg to send to the same group per min
+    let loop_dur = tokio::time::Duration::from_millis(60_000 / 20);
 
-    let client = reqwest::blocking::Client::new();
-    let res = client.post(format!("https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${GROUP}&text=${msg}&parse_mode=html")).send();
-    if let Err(e) = res {
-        println!("{e:?}");
-    } else {
-        println!("Success!");
+    loop {
+        let res = client.post(&dst).query(&payload).send().await;
+
+        match res {
+            Ok(res) => {
+                let body = &res
+                    .text()
+                    .await
+                    .unwrap_or("Failed to get response text".into())[..50];
+
+                println!("Success! {body}");
+            }
+            Err(err) => {
+                println!("{err:?}");
+            }
+        }
+
+        tokio::time::sleep(loop_dur).await;
     }
-
-    Ok(())
 }

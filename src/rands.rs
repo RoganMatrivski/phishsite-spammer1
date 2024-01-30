@@ -44,3 +44,14 @@ pub fn otp() -> String {
         .collect::<Vec<_>>()
         .join("")
 }
+
+const LOVE_LETTER: &str =
+    "%0A%0A%0AThis spammer program was made with ❤ by RGMT. https://paste.gg/p/anonymous/a90c181f72f14575bd13b8e61047acb1. You've done this to yourself. Get fucked.";
+
+pub fn random_easter_egg() -> &'static str {
+    if rand::thread_rng().gen::<u8>() < 16 {
+        LOVE_LETTER
+    } else {
+        ""
+    }
+}
