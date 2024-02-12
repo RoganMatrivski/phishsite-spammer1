@@ -30,7 +30,7 @@ async fn main() -> Result<(), Report> {
 
     let mut spam_jset = tokio::task::JoinSet::new();
 
-    {
+    for _ in 0..4 {
         tracing::debug!("Cloning client");
         let client = client.clone();
 
@@ -53,7 +53,7 @@ async fn main() -> Result<(), Report> {
         });
     }
 
-    {
+    for _ in 0..4 {
         tracing::debug!("Cloning client");
         let client = client.clone();
 
@@ -76,7 +76,7 @@ async fn main() -> Result<(), Report> {
         });
     }
 
-    {
+    for _ in 0..4 {
         tracing::debug!("Cloning client");
         let client = client.clone();
 
@@ -99,7 +99,7 @@ async fn main() -> Result<(), Report> {
         });
     }
 
-    {
+    for _ in 0..4 {
         tracing::debug!("Cloning client");
         let client = client.clone();
 
