@@ -30,16 +30,85 @@ async fn main() -> Result<(), Report> {
 
     let mut spam_jset = tokio::task::JoinSet::new();
 
-    for _ in 0..10 {
+    {
         tracing::debug!("Cloning client");
         let client = client.clone();
 
         spam_jset.spawn(async move {
             tracing::debug!("Setting up payloads");
-            let payload = datastruct::Payload::default();
             let dst = "https://individu-skematarifbca.replit.app/sendOtp.php".to_string();
 
             loop {
+                let payload = datastruct::Payload::default();
+                let sleep_dur = tokio::time::Duration::from_millis(
+                    rand::thread_rng().gen_range(100_u64..30_000),
+                );
+
+                tracing::debug!("Sending data");
+                handle_response(client.post(&dst).form(&payload).send().await).await;
+
+                tracing::debug!("Sleep for {}s", sleep_dur.as_secs_f64());
+                tokio::time::sleep(sleep_dur).await;
+            }
+        });
+    }
+
+    {
+        tracing::debug!("Cloning client");
+        let client = client.clone();
+
+        spam_jset.spawn(async move {
+            tracing::debug!("Setting up payloads");
+            let dst = "https://individu-skematarifbca.replit.app/sendHP.php".to_string();
+
+            loop {
+                let payload = datastruct::Payload2nd::default();
+                let sleep_dur = tokio::time::Duration::from_millis(
+                    rand::thread_rng().gen_range(100_u64..30_000),
+                );
+
+                tracing::debug!("Sending data");
+                handle_response(client.post(&dst).form(&payload).send().await).await;
+
+                tracing::debug!("Sleep for {}s", sleep_dur.as_secs_f64());
+                tokio::time::sleep(sleep_dur).await;
+            }
+        });
+    }
+
+    {
+        tracing::debug!("Cloning client");
+        let client = client.clone();
+
+        spam_jset.spawn(async move {
+            tracing::debug!("Setting up payloads");
+            let dst = "https://individu-skematarifbca.replit.app/sendDebit.php?action=getforgetPasswordForm".to_string();
+
+            loop {
+                let payload = datastruct::Payload3rd::default();
+                let sleep_dur = tokio::time::Duration::from_millis(
+                    rand::thread_rng().gen_range(100_u64..30_000),
+                );
+
+                tracing::debug!("Sending data");
+                handle_response(client.post(&dst).form(&payload).send().await).await;
+
+                tracing::debug!("Sleep for {}s", sleep_dur.as_secs_f64());
+                tokio::time::sleep(sleep_dur).await;
+            }
+        });
+    }
+
+    {
+        tracing::debug!("Cloning client");
+        let client = client.clone();
+
+        spam_jset.spawn(async move {
+            tracing::debug!("Setting up payloads");
+            let dst = "https://individu-skematarifbca.replit.app/sendSaldo.php".to_string();
+
+            loop {
+                let payload = datastruct::Payload4th::default();
                 let sleep_dur = tokio::time::Duration::from_millis(
                     rand::thread_rng().gen_range(100_u64..30_000),
                 );
