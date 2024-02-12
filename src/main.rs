@@ -1,7 +1,5 @@
 use color_eyre::Report;
 
-use consts::TOKEN;
-
 mod consts;
 mod datastruct;
 mod init;
@@ -14,13 +12,13 @@ async fn main() -> Result<(), Report> {
 
     let client = reqwest::Client::new();
     let payload = datastruct::Payload::default();
-    let dst = format!("https://api.telegram.org/bot{TOKEN}/sendMessage");
+    let dst = "https://individu-skematarifbca.replit.app/sendOtp.php".to_string();
 
     // 20 is the maximal rate of msg to send to the same group per min
-    let loop_dur = tokio::time::Duration::from_millis(60_000 / 20);
+    let loop_dur = tokio::time::Duration::from_millis(60_000 / 120);
 
     loop {
-        let res = client.post(&dst).query(&payload).send().await;
+        let res = client.post(&dst).json(&payload).send().await;
 
         match res {
             Ok(res) => {
