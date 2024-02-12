@@ -1,7 +1,5 @@
 use color_eyre::Report;
 
-
-
 macro_rules! get_this_pkg_name {
     () => {
         env!("CARGO_PKG_NAME").replace('-', "_")
@@ -14,7 +12,7 @@ pub fn initialize() -> Result<(), Report> {
     use tracing_subscriber::{fmt, EnvFilter};
 
     color_eyre::install()?;
-    let verbosity = Some("warn");
+    let verbosity = Some("debug");
 
     let env_filter = EnvFilter::from_default_env()
         .add_directive(tracing::level_filters::LevelFilter::WARN.into());

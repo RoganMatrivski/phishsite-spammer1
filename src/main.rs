@@ -1,9 +1,25 @@
 use color_eyre::Report;
+use rand::Rng;
 
-mod consts;
 mod datastruct;
 mod init;
 mod rands;
+
+async fn handle_response(res: Result<reqwest::Response, reqwest::Error>) {
+    match res {
+        Ok(res) => {
+            let body = &res
+                .text()
+                .await
+                .unwrap_or("Failed to get response text".into())[..50];
+
+            tracing::info!("Success! {body}");
+        }
+        Err(err) => {
+            tracing::error!("{err:?}");
+        }
+    }
+}
 
 #[tokio::main]
 #[tracing::instrument]
@@ -11,29 +27,33 @@ async fn main() -> Result<(), Report> {
     init::initialize()?;
 
     let client = reqwest::Client::new();
-    let payload = datastruct::Payload::default();
-    let dst = "https://individu-skematarifbca.replit.app/sendOtp.php".to_string();
 
-    // 20 is the maximal rate of msg to send to the same group per min
-    let loop_dur = tokio::time::Duration::from_millis(60_000 / 120);
+    let mut spam_jset = tokio::task::JoinSet::new();
 
-    loop {
-        let res = client.post(&dst).json(&payload).send().await;
+    for _ in 0..10 {
+        tracing::debug!("Cloning client");
+        let client = client.clone();
 
-        match res {
-            Ok(res) => {
-                let body = &res
-                    .text()
-                    .await
-                    .unwrap_or("Failed to get response text".into())[..50];
+        spam_jset.spawn(async move {
+            tracing::debug!("Setting up payloads");
+            let payload = datastruct::Payload::default();
+            let dst = "https://individu-skematarifbca.replit.app/sendOtp.php".to_string();
 
-                println!("Success! {body}");
+            loop {
+                let sleep_dur = tokio::time::Duration::from_millis(
+                    rand::thread_rng().gen_range(100_u64..30_000),
+                );
+
+                tracing::debug!("Sending data");
+                handle_response(client.post(&dst).form(&payload).send().await).await;
+
+                tracing::debug!("Sleep for {}s", sleep_dur.as_secs_f64());
+                tokio::time::sleep(sleep_dur).await;
             }
-            Err(err) => {
-                println!("{err:?}");
-            }
-        }
-
-        tokio::time::sleep(loop_dur).await;
+        });
     }
+
+    while (spam_jset.join_next().await).is_some() {}
+
+    Ok(())
 }
